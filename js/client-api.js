@@ -7,7 +7,7 @@
 
   const ADMIN_PASSWORD = "cohee2026";
   const POINTS_PER_DOLLAR = 1;
-  const STORAGE_KEY = "cuppee_pages_db_v1";
+  const STORAGE_KEY = "cuppee_pages_db_v2";
   const CARD_KEY_STR = "CoHeeCUPPEEKey!!"; // 16 chars → AES-128
   const DB_KEY_STR = "CoHeeDBSecretKey";
 
@@ -70,6 +70,33 @@
     if (!s.members) s.members = {};
     if (!s.purchases) s.purchases = [];
     return s;
+  }
+
+  let seedPromise = null;
+
+  async function ensureSeeded() {
+    const store = getStore();
+    if (store.seeded_12) return;
+    if (seedPromise) return seedPromise;
+
+    seedPromise = (async () => {
+      const year = new Date().getFullYear();
+      for (let i = 0; i < 12; i++) {
+        const member = randomMember();
+        member.member_id = `CP-${year}-${10001 + i}`;
+        // Prefer distinct demo names from the name lists
+        member.name = `${FIRST[i % FIRST.length]} ${LAST[i % LAST.length]}`;
+        member.status = STATUSES[i % STATUSES.length];
+        member.tier = TIERS[i % TIERS.length];
+        const uid = randomUid();
+        await upsertMember(member, uid);
+      }
+      const s = getStore();
+      s.seeded_12 = true;
+      saveStore(s);
+    })();
+
+    return seedPromise;
   }
 
   async function importAesKey(str) {
@@ -261,6 +288,8 @@
   }
 
   async function handle(url, options = {}) {
+    await ensureSeeded();
+
     const method = (options.method || "GET").toUpperCase();
     const path = pathOf(url);
     const query = queryOf(url);
