@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CoHee · CUPPEE Membership</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+<body>
+  <div class="atmosphere" aria-hidden="true"></div>
+
+  <div class="app">
+    <header class="brand-header">
+      <p class="brand-shop">CoHee</p>
+      <h1 class="brand-product">CUPPEE</h1>
+      <p class="brand-tag">Membership desk</p>
+    </header>
+
+    <nav class="tabs tabs--3" role="tablist" aria-label="CUPPEE pages">
+      <button class="tab is-active" role="tab" aria-selected="true" data-tab="check" id="tab-check">
+        Check
+      </button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="admin" id="tab-admin">
+        Admin
+      </button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="db" id="tab-db">
+        Data Base
+      </button>
+    </nav>
+
+    <p class="reader-pill" id="reader-status">Checking reader…</p>
+
+    <!-- ===================== CHECK ===================== -->
+    <section class="panel is-active" id="panel-check" role="tabpanel" aria-labelledby="tab-check">
+      <div class="nfc-orb" id="check-orb">
+        <div class="nfc-orb__ring"></div>
+        <div class="nfc-orb__core">
+          <span>NFC</span>
+          <small>tap cup</small>
+        </div>
+      </div>
+
+      <div class="result-card" id="check-result">
+        <p class="result-state" id="check-state">Ready to scan</p>
+        <p class="result-detail" id="check-detail">Place the CUPPEE cup on the reader</p>
+        <div class="member-meta" id="check-meta" hidden>
+          <p class="meta-uid" id="check-uid"></p>
+          <p class="meta-name" id="check-name"></p>
+          <p class="meta-id" id="check-id"></p>
+          <p class="meta-points" id="check-points"></p>
+          <p class="meta-dates" id="check-dates"></p>
+        </div>
+      </div>
+
+      <button type="button" class="btn btn-primary" id="btn-scan">Scan membership</button>
+
+      <form class="purchase-form" id="purchase-form" hidden>
+        <h2>This visit</h2>
+        <p class="form-hint">Select what the customer purchased.</p>
+
+        <label class="field">
+          <span>Item</span>
+          <select id="purchase-item" required>
+            <option value="">Select an item…</option>
+          </select>
+        </label>
+
+        <p class="price-line" id="purchase-price" hidden>Price · HKD <strong>0</strong></p>
+
+        <label class="check-row">
+          <input type="checkbox" id="purchase-update-card" checked />
+          <span>Write updated points back to NFC card</span>
+        </label>
+
+        <button type="submit" class="btn btn-primary" id="btn-purchase">Save purchase</button>
+        <p class="form-msg" id="purchase-msg" role="status"></p>
+      </form>
+
+      <div class="purchase-list" id="purchase-list" hidden>
+        <h3>Recent visits</h3>
+        <ul id="purchase-list-ul"></ul>
+      </div>
+    </section>
+
+    <!-- ===================== ADMIN ===================== -->
+    <section class="panel" id="panel-admin" role="tabpanel" aria-labelledby="tab-admin" hidden>
+      <div id="admin-gate">
+        <div class="gate-card">
+          <h2>Admin access</h2>
+          <p class="form-hint">Password required to create and write memberships.</p>
+          <label class="field">
+            <span>Password</span>
+            <input type="password" id="admin-password" autocomplete="current-password" />
+          </label>
+          <button type="button" class="btn btn-primary" id="btn-admin-login">Unlock admin</button>
+          <p class="form-msg" id="admin-login-msg" role="status"></p>
+        </div>
+      </div>
+
+      <div id="admin-workspace" hidden>
+        <div class="admin-toolbar">
+          <p class="admin-unlocked">Admin unlocked</p>
+          <button type="button" class="btn btn-ghost" id="btn-admin-logout">Lock</button>
+        </div>
+
+        <div class="nfc-orb nfc-orb--sm" id="admin-orb">
+          <div class="nfc-orb__ring"></div>
+          <div class="nfc-orb__core">
+            <span>NFC</span>
+            <small>card</small>
+          </div>
+        </div>
+
+        <button type="button" class="btn btn-secondary btn-block" id="btn-admin-scan">
+          Scan card into form
+        </button>
+
+        <form class="admin-form" id="admin-form">
+          <h2>Membership</h2>
+
+          <label class="field">
+            <span>Member name</span>
+            <input type="text" id="admin-name" required placeholder="Alex Wong" />
+          </label>
+
+          <div class="field-row">
+            <label class="field grow">
+              <span>Member ID</span>
+              <input type="text" id="admin-id" required placeholder="CP-2026-88421" />
+            </label>
+            <button type="button" class="btn btn-secondary" id="btn-gen-id">Generate</button>
+          </div>
+
+          <label class="field">
+            <span>Loyalty points</span>
+            <input type="number" id="admin-points" min="0" value="0" />
+          </label>
+
+          <div class="field-row">
+            <label class="field grow">
+              <span>Start date</span>
+              <input type="date" id="admin-start" required />
+            </label>
+            <label class="field grow">
+              <span>End date</span>
+              <input type="date" id="admin-end" required />
+            </label>
+          </div>
+
+          <div class="field-row">
+            <label class="field grow">
+              <span>Status</span>
+              <select id="admin-status">
+                <option>Active</option>
+                <option>Expired</option>
+                <option>Suspended</option>
+              </select>
+            </label>
+            <label class="field grow">
+              <span>Tier</span>
+              <select id="admin-tier">
+                <option>Silver</option>
+                <option selected>Gold</option>
+                <option>Platinum</option>
+              </select>
+            </label>
+          </div>
+
+          <label class="check-row">
+            <input type="checkbox" id="admin-write-card" checked />
+            <span>Encrypt with AES-128 and write to NFC card</span>
+          </label>
+
+          <button type="submit" class="btn btn-primary" id="btn-write">Create &amp; write card</button>
+          <button type="button" class="btn btn-ghost" id="btn-clear-form">Clear form</button>
+          <p class="form-msg" id="admin-msg" role="status"></p>
+        </form>
+      </div>
+    </section>
+
+    <!-- ===================== DATA BASE ===================== -->
+    <section class="panel" id="panel-db" role="tabpanel" aria-labelledby="tab-db" hidden>
+      <div id="db-gate">
+        <div class="gate-card">
+          <h2>Database access</h2>
+          <p class="form-hint">Password required to view stored customer records.</p>
+          <label class="field">
+            <span>Password</span>
+            <input type="password" id="db-password" autocomplete="current-password" />
+          </label>
+          <button type="button" class="btn btn-primary" id="btn-db-login">Unlock database</button>
+          <p class="form-msg" id="db-login-msg" role="status"></p>
+        </div>
+      </div>
+
+      <div id="db-workspace" hidden>
+        <div class="admin-toolbar">
+          <p class="admin-unlocked">Database unlocked</p>
+          <button type="button" class="btn btn-ghost" id="btn-db-logout">Lock</button>
+        </div>
+
+        <div class="member-list db-panel">
+          <div class="member-list__head">
+            <h3>Stored members</h3>
+            <button type="button" class="btn btn-ghost" id="btn-refresh-members">Refresh</button>
+          </div>
+
+          <label class="field search-field">
+            <span>Search</span>
+            <input
+              type="search"
+              id="db-search"
+              placeholder="Name, ID, tier, status…"
+              autocomplete="off"
+            />
+          </label>
+          <p class="db-count" id="db-count"></p>
+          <ul id="members-ul"></ul>
+        </div>
+      </div>
+    </section>
+
+    <footer class="app-footer">
+      CoHee · CUPPEE · AES-128 · NTAG 424 DNA
+    </footer>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
